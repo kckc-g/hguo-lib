@@ -32,7 +32,7 @@ class Some(OptionBase):
     def get_or_else(self, else_value):
         return self._v
 
-class Nothing(OptionBase):
+class _Nothing(OptionBase):
     EMPTY_ITER = iter(())
     
     defined = False
@@ -46,7 +46,8 @@ class Nothing(OptionBase):
     def get_or_else(self, else_value):
         return else_value
 
-NOTHING = Nothing()
+NOTHING = _Nothing()
+Nothing = NOTHING
 
 def to_option(value=None, defined_func=bool):
     if defined_func(value):
