@@ -88,6 +88,7 @@ def test_flatten():
     assert list(flatten([1,[2, 3], 4])) == [1, 2, 3, 4]
     assert list(flatten([5,[6], [[7,8],9], [10]])) == [5, 6, 7, 8, 9, 10]
     assert list(flatten(5)) == [5]
+    assert list(flatten('asdf')) == ['asdf']
 
 def test_expand_args():
     assert expand_args(str.split)(['as df', 's']) == ['a', ' df']
