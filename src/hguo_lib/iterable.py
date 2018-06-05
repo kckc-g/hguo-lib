@@ -1,6 +1,9 @@
+from itertools import dropwhile
 from itertools import ifilter
 from itertools import ifilterfalse
 from itertools import imap
+from itertools import izip
+from itertools import takewhile
 
 from option import partial_return
 
@@ -49,9 +52,12 @@ class Iterable(Materialiser):
             self._it = imap(map_all(*fns), self._it)
         return self
 
-    def flatmap(self, *fns):
+    def flatten(self):
         self._it = flatten(self._it)
-        return self.map(*fns)
+        return self
+
+    def flatmap(self, *fns):
+        return self.flatten().map(*fns)
 
     def partial_map(self, fn):
         return self.map(partial_return(fn))
@@ -63,6 +69,35 @@ class Iterable(Materialiser):
     def filter_not(self, predicate):
         self._it = ifilterfalse(predicate, self._it)
         return self
+
+    def takewhile(self, f):
+        self._it = takewhile(f, self._it)
+        return self
+
+    def dropwhile(self, f):
+        self._it = dropwhile(f, self._it)
+        return self
+
+    def zip_with(self, *others):
+        self._it = izip(self._it, *others)
+        return self
+
+try:
+    from Queue import Queue
+except ImportError:
+    from queue import Queue
+
+class QueueIter:
+    def __init__(self):
+        self._queue = Queue()
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        return self._queue.get()
+
+    
 
 def test_iterable():
     assert Iterable([1,2,3]).map(lambda x: 2*x).map(lambda x:x+1).to_list() == [3, 5, 7]
