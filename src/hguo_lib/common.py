@@ -1,5 +1,3 @@
-
-
 class FunctionHelper:
     @staticmethod
     def this(x):
@@ -27,21 +25,14 @@ class FunctionHelper:
 
     @staticmethod
     def is_none(x):
-        return x is None
+        return FunctionHelper.is_(None)
 
     @staticmethod
     def is_not_none(x):
-        return x is not None
-
-def map_all(*fns):
-    def _fn(*args, **kwargs):
-        return tuple(fn(*args, **kwargs) for fn in fns)
-    return _fn
+        return FunctionHelper.not_(None)
 
 def apply_expand(fn):
     def _fn(*args, **kwargs):
-        print args,
-        print kwargs
         if args and kwargs:
             return ((args, kwargs), fn(*args, **kwargs))
         elif not args and not kwargs:
@@ -51,6 +42,21 @@ def apply_expand(fn):
         return (args or kwargs, fn(*args, **kwargs))
     return _fn
 
+def map_to_tuple(keyfunc=None, valuefunc=FunctionHelper.this):
+    """Maps inputs to a tuple of two.
+    This is handy to turn to into a dict
+
+    keyfunc and valuefunc are callable with signature: "def f(*args, **kwargs)"
+
+    :param keyfunc: Callable that transforms inputs into a key (first value in tuple)
+        Optional, if None, the key is just the inputs (i.e. FunctionHelper.this would be called)
+    :param valuefnc: Callable that transforms inputs into a value (second value in tuple)
+    """
+    keyfunc = keyfunc or FunctionHelper.this
+    def _fn(*args, **kwargs):
+        return (keyfunc(*args, **kwargs), valuefunc(*args, **kwargs))
+    return _fn 
+
 def zip_apply(*fns):
     def _fn(*args):
         return tuple(fn(arg) for fn, arg in zip(fns, args))
@@ -59,14 +65,25 @@ def zip_apply(*fns):
 def apply(v, fn):
     return fn(v)
 
+def apply_all(*fns):
+    def _fn(*args, **kwargs):
+        return tuple(fn(*args, **kwargs) for fn in fns)
+    return _fn
+
 def compose(*fns):
+    assert fns, 'Compose requires at least one function, none provided'
     def _fn(*args):
         return reduce(apply, fns[1:], fns[0](*args))
     return _fn
 
-def expand_args(fn):
+def apply_expand_args(fn):
     def _fn(args):
         return fn(*args)
+    return _fn
+
+def apply_expand_kwargs(fn):
+    def _fn(args):
+        return fn(**kwargs)
     return _fn
 
 def flatten(ll):
@@ -90,11 +107,11 @@ def test_flatten():
     assert list(flatten(5)) == [5]
     assert list(flatten('asdf')) == ['asdf']
 
-def test_expand_args():
-    assert expand_args(str.split)(['as df', 's']) == ['a', ' df']
+def test_apply_expand_args():
+    assert apply_expand_args(str.split)(['as df', 's']) == ['a', ' df']
 
-def test_map_all():
-    assert map_all(str.strip, str.split, str.lower, str.upper)('as df') == ('as df', ['as', 'df'], 'as df', 'AS DF')
+def test_apply_all():
+    assert apply_all(str.strip, str.split, str.lower, str.upper)('as df') == ('as df', ['as', 'df'], 'as df', 'AS DF')
 
 def test_apply_expand():
     def _fn(*args, **kwargs):

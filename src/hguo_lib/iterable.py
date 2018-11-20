@@ -9,7 +9,7 @@ from option import partial_return
 
 from common import flatten
 from common import FunctionHelper
-from common import map_all
+from common import apply_all
 
 class Materialiser(object):
     def to_list(self):
@@ -49,7 +49,7 @@ class Iterable(Materialiser):
         if len(fns) == 1:
             self._it = imap(fns[0], self._it)
         elif len(fns) > 1:
-            self._it = imap(map_all(*fns), self._it)
+            self._it = imap(apply_all(*fns), self._it)
         return self
 
     def flatten(self):
