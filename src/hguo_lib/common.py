@@ -31,20 +31,9 @@ class FunctionHelper:
     def is_not_none(x):
         return FunctionHelper.not_(None)
 
-def apply_expand(fn):
-    def _fn(*args, **kwargs):
-        if args and kwargs:
-            return ((args, kwargs), fn(*args, **kwargs))
-        elif not args and not kwargs:
-            return ((), fn(*args, **kwargs))
-        elif args and len(args) == 1:
-            return (args[0], fn(args[0]))
-        return (args or kwargs, fn(*args, **kwargs))
-    return _fn
-
 def map_to_tuple(keyfunc=None, valuefunc=FunctionHelper.this):
     """Maps inputs to a tuple of two.
-    This is handy to turn to into a dict
+    This is handy to turn a stream of tuples to into a dict
 
     keyfunc and valuefunc are callable with signature: "def f(*args, **kwargs)"
 
@@ -56,11 +45,6 @@ def map_to_tuple(keyfunc=None, valuefunc=FunctionHelper.this):
     def _fn(*args, **kwargs):
         return (keyfunc(*args, **kwargs), valuefunc(*args, **kwargs))
     return _fn 
-
-def zip_apply(*fns):
-    def _fn(*args):
-        return tuple(fn(arg) for fn, arg in zip(fns, args))
-    return _fn
 
 def apply(v, fn):
     return fn(v)
@@ -112,22 +96,6 @@ def test_apply_expand_args():
 
 def test_apply_all():
     assert apply_all(str.strip, str.split, str.lower, str.upper)('as df') == ('as df', ['as', 'df'], 'as df', 'AS DF')
-
-def test_apply_expand():
-    def _fn(*args, **kwargs):
-        return 'r'
-    assert apply_expand(_fn)(1, 2) == (1, 'r')
-    assert apply_expand(_fn)(1, 2) == ((1, 2), 'r')
-    assert apply_expand(_fn)(1, 2, 3) == ((1, 2, 3), 'r')
-    assert apply_expand(_fn)(1, 2, 3, kwarg=1) == (((1, 2, 3), {'kwarg':1}), 'r')
-
-def test_zip_apply():
-    add1 = lambda v:v + 1
-    add2 = lambda v:v * 2
-    add3 = lambda v:v - 3
-    add4 = lambda v:v + 4
-    assert zip_apply(add1, add2, add3, add4)(5, 5, 5, 5) == (6, 10, 2, 9)
-
 
 def test_apply():
     assert apply(' asdf', str.strip) == 'asdf'

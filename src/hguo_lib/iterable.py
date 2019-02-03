@@ -9,7 +9,7 @@ from option import partial_return
 
 from common import flatten
 from common import FunctionHelper
-from common import apply_all
+from common import apply_expand_args
 
 class Materialiser(object):
     def to_list(self):
@@ -45,19 +45,18 @@ class Iterable(Materialiser):
     def __iter__(self):
         return iter(self._it)
 
-    def map(self, *fns):
-        if len(fns) == 1:
-            self._it = imap(fns[0], self._it)
-        elif len(fns) > 1:
-            self._it = imap(apply_all(*fns), self._it)
+    def map(self, func, expand_args=False):
+        if expand_args:
+            func = apply_expand_args(func)
+        self._it = imap(func, self._it)
         return self
 
     def flatten(self):
         self._it = flatten(self._it)
         return self
 
-    def flatmap(self, *fns):
-        return self.flatten().map(*fns)
+    def flatmap(self, fn):
+        return self.flatten().map(fn)
 
     def partial_map(self, fn):
         return self.map(partial_return(fn))
@@ -103,7 +102,7 @@ def test_iterable():
     assert Iterable([1,2,3]).map(lambda x: 2*x).map(lambda x:x+1).to_list() == [3, 5, 7]
     assert Iterable([1,2,3]).map(lambda x: 2*x).map(lambda x:x+1).sum() == 15
 
-    assert Iterable([1,2,3]).map(lambda x: 2*x, lambda x:x+1).to_list() == [(2, 2), (4, 3), (6, 4)]
+    assert Iterable([1,2,3]).map(lambda x: (2*x, x+1)).to_list() == [(2, 2), (4, 3), (6, 4)]
 
     assert Iterable(xrange(10)).count() == 10
 
@@ -111,7 +110,7 @@ def test_iterable():
 
     assert Iterable([1,2,3,3,4]).to_set() == set([4,3,2,1])
 
-    assert Iterable([1,2,3]).map(FunctionHelper.this, lambda x: 2*x).to_dict() == {2:4, 3:6, 1:2}
+    assert Iterable([1,2,3]).map(lambda x: (x, 2*x)).to_dict() == {2:4, 3:6, 1:2}
 
     assert Iterable([1,[2],[[3,4],5]]).flatmap(lambda x: x+10).to_list() == [11, 12, 13, 14, 15]
 
